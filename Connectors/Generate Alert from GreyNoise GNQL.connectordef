@@ -1,0 +1,98 @@
+{
+  "IsEnabled": true,
+  "IsCustom": true,
+  "Integration": "GreyNoise",
+  "DocumentationLink": null,
+  "Name": "Generate Alert from GreyNoise GNQL",
+  "Description": "Provide a GNQL to generate alerts from.  Recommended to run once daily and to ensure the last_seen:1d option is passed to the GNQL.  Each returned IP from the query will create an Alert.",
+  "Creator": "Admin",
+  "Script": "from SiemplifyConnectors import SiemplifyConnectorExecution\nfrom SiemplifyConnectorsDataModel import AlertInfo\nfrom SiemplifyUtils import output_handler, unix_now\n\nimport sys\nimport requests\n\n\nCONNECTOR_NAME = \"GreyNoise GNQL Connector\"\nVENDOR = \"GreyNoise\"\nPRODUCT = \"GreyNoise\"\n\n\n@output_handler\ndef main(is_test_run):\n    alerts = []\n    siemplify = SiemplifyConnectorExecution()\n    siemplify.script_name = CONNECTOR_NAME\n\n    if (is_test_run):\n        siemplify.LOGGER.info(\"***** This is an \\\"IDE Play Button\\\"\\\\\\\"Run Connector once\\\" test run ******\")\n\n    siemplify.LOGGER.info(\"==================== Main - Param Init ====================\")\n\n    query = siemplify.extract_connector_param(\"query\", print_value=True)\n    limit = siemplify.extract_connector_param(\"limit\", default_value=\"10\", is_mandatory=False, print_value=True)\n    api_key = siemplify.extract_connector_param(\"GN API Key\", print_value=False)\n    \n\n    headers = {\n        \"Accept\": \"application/json\",\n        \"Content-Type\": \"application/json\",\n        \"key\": api_key,\n        \"User-Agent\": \"siemplify-v1.0.0\",\n    }\n\n    siemplify.LOGGER.info(\"------------------- Main - Started -------------------\")\n\n    try:\n        url = (\"https://api.greynoise.io/v2/experimental/gnql?query={}&size={}\").format(query,limit)\n    \n        res = requests.get(url, headers=headers)\n        \n        if res.status_code == 200 and res.json()['count'] > 0:    \n            output = res.json()\n            \n            for result in output['data']:\n                datetime_in_unix_time = unix_now()\n                alert_id = str(datetime_in_unix_time) + \"-\" + result['ip']\n\n                # Creating the event by calling create_event() function\n                created_event = create_event(siemplify, alert_id, result, datetime_in_unix_time)\n                # Creating the alert by calling create_alert() function\n                created_alert = create_alert(siemplify, alert_id, result, datetime_in_unix_time, created_event)\n\n                # Checking that the created_alert is not None\n                if created_alert is not None:\n                    alerts.append(created_alert)\n                    siemplify.LOGGER.info(f\"Added Alert {alert_id} to package results\")\n\n    \n    except Exception as e:\n        siemplify.LOGGER.error(\"Failed to process alert {}\".format(alert_id), alert_id=alert_id)\n        siemplify.LOGGER.exception(e)\n\n    siemplify.LOGGER.info(\"------------------- Main - Finished -------------------\")\n    siemplify.return_package(alerts)\n    \ndef create_alert(siemplify, alert_id, result, datetime_in_unix_time, created_event):\n    \"\"\"\n    Returns an alert which is one event that contains one unread email message\n    \"\"\"\n    siemplify.LOGGER.info(f\"-------------- Started processing Alert {alert_id}\")\n    create_event = None\n    alert_info = AlertInfo()\n\n    # Initializes the alert_info Characteristics Fields\n    alert_info.display_id = f\"{alert_id}\" # Each alert needs to have a unique id, otherwise it won't  create a case with the same alert id.\n    alert_info.ticket_id = f\"{alert_id}\" # In default, ticket_id = display_id. However, if for some reason the external alert id is different from  the display_id, you can save the original external alert id in the \"ticket_id\" field.\n    alert_info.name = str(result['ip']) + ' has been observed mass-scanning the internet'\n    alert_info.start_time = datetime_in_unix_time # Time should be saved in UnixTime. You may use SiemplifyUtils.convert_datetime_to_unix_time, or SiemplifyUtils.convert_string_to_datetime\n    alert_info.end_time = datetime_in_unix_time # Time should be saved in UnixTime. You may use SiemplifyUtils.convert_datetime_to_unix_time, or SiemplifyUtils.convert_string_to_datetime\n    alert_info.SourceAddress = result['ip']\n    alert_info.EventTime = result['last_seen']\n    alert_info.rule_generator = f\"GreyNoise Ingestion\"\n    alert_info.priority = 60  # Informative = -1,Low = 40,Medium = 60,High = 80,Critical = 100.\n    alert_info.device_vendor = VENDOR # The field will be fetched from the Original Alert. If you build this alert manually, state the source vendor of the data. (ie: Microsoft, Mcafee)\n    alert_info.device_product = PRODUCT # The field will be fetched from the Original Alert. If you build this alert manually, state the source product of the data. (ie: ActiveDirectory, AntiVirus)\n    # ----------------------------- Alert Fields initialization END -----------------------------#\n    siemplify.LOGGER.info(f\"---------- Events creating started for alert  {alert_id}\")\n    try:\n        if created_event is not None:\n            alert_info.events.append(created_event)\n        siemplify.LOGGER.info(f\"Added Event {alert_id} to Alert {alert_id}\")\n    # Raise an exception if failed to process the event\n    except Exception as e:\n        siemplify.LOGGER.error(f\"Failed to process event {alert_id}\")\n        siemplify.LOGGER.exception(e)\n\n    return alert_info\n\ndef create_event(siemplify, alert_id, result, datetime_in_unix_time):\n    \"\"\"\n    Returns the digested data of a single unread email\n    \"\"\"\n    siemplify.LOGGER.info(f\"--- Started processing Event:  alert_id: {alert_id} | event_id: {alert_id}\")\n    event = {}\n    event[\"StartTime\"] = datetime_in_unix_time # Time should be saved in UnixTime. You may use SiemplifyUtils.convert_datetime_to_unix_time, or SiemplifyUtils.convert_string_to_datetime\n    event[\"EndTime\"] = datetime_in_unix_time # Time should be saved in UnixTime. You may use SiemplifyUtils.convert_datetime_to_unix_time, or SiemplifyUtils.convert_string_to_datetime\n    event[\"event_name\"] = \"Mass Scanning IP Detected\" \n    event[\"device_product\"] = PRODUCT # ie: \"device_product\" is the field name that describes the product the event originated from.\n\n    event[\"SourceAddress\"] = result[\"ip\"]\n    event[\"EventTime\"] = result[\"last_seen\"]\n    event[\"Classification\"] = result[\"classification\"]\n\n\n    siemplify.LOGGER.info(f\"--- Finished processing Event: alert_id: {alert_id} | event_id: {alert_id}\")\n    return event\n\n\n\nif __name__ == \"__main__\":\n    # Connectors are run in iterations. The interval is configurable from the ConnectorsScreen UI.\n    is_test_run = not (len(sys.argv) < 2 or sys.argv[1] == 'True')\n    main(is_test_run)",
+  "Version": 20,
+  "MappingRules": [],
+  "ProductToVisualFamilyRecords": [],
+  "SimulationUseCases": {
+    "CasesForUseCase": [],
+    "UseCaseName": null
+  },
+  "Parameters": [
+    {
+      "ConnectorDefinitionId": 2,
+      "IsMandatory": true,
+      "DefaultValue": "product",
+      "Name": "DeviceProductField",
+      "Type": 2,
+      "Mode": 0,
+      "Description": "The field name used to determine the device product",
+      "Id": 0,
+      "CreationTimeUnixTimeInMs": 1612214748704,
+      "ModificationTimeUnixTimeInMs": 1612214748704
+    },
+    {
+      "ConnectorDefinitionId": 2,
+      "IsMandatory": true,
+      "DefaultValue": "event_type",
+      "Name": "EventClassId",
+      "Type": 2,
+      "Mode": 0,
+      "Description": "The field name used to determine the event name (sub-type)",
+      "Id": 0,
+      "CreationTimeUnixTimeInMs": 1612214748704,
+      "ModificationTimeUnixTimeInMs": 1612214748704
+    },
+    {
+      "ConnectorDefinitionId": 2,
+      "IsMandatory": true,
+      "DefaultValue": "abc123",
+      "Name": "GN API Key",
+      "Type": 3,
+      "Mode": 2,
+      "Description": "GreyNoise API Key",
+      "Id": 0,
+      "CreationTimeUnixTimeInMs": 1612214748704,
+      "ModificationTimeUnixTimeInMs": 1612214748704
+    },
+    {
+      "ConnectorDefinitionId": 2,
+      "IsMandatory": true,
+      "DefaultValue": "10",
+      "Name": "limit",
+      "Type": 2,
+      "Mode": 2,
+      "Description": "The maximum number of results to return. Default is 10.",
+      "Id": 0,
+      "CreationTimeUnixTimeInMs": 1612214748704,
+      "ModificationTimeUnixTimeInMs": 1612214748704
+    },
+    {
+      "ConnectorDefinitionId": 2,
+      "IsMandatory": true,
+      "DefaultValue": "30",
+      "Name": "PythonProcessTimeout",
+      "Type": 2,
+      "Mode": 0,
+      "Description": "The timeout limit (in seconds) for the python process running current script",
+      "Id": 0,
+      "CreationTimeUnixTimeInMs": 1612214748704,
+      "ModificationTimeUnixTimeInMs": 1612214748704
+    },
+    {
+      "ConnectorDefinitionId": 2,
+      "IsMandatory": true,
+      "DefaultValue": "ip:89.248.172.0/24 last_seen:1d",
+      "Name": "query",
+      "Type": 2,
+      "Mode": 2,
+      "Description": "GNQL Query to Create Alerts from.  Each result of the query will create an alert.",
+      "Id": 0,
+      "CreationTimeUnixTimeInMs": 1612214748704,
+      "ModificationTimeUnixTimeInMs": 1612214748704
+    }
+  ],
+  "Rules": [],
+  "IsConnectorRulesSupported": true,
+  "IsSystem": false,
+  "PythonVersion": "None",
+  "Id": 0,
+  "CreationTimeUnixTimeInMs": 1612214748694,
+  "ModificationTimeUnixTimeInMs": 1612214748697
+}

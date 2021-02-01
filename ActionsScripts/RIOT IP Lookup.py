@@ -1,5 +1,5 @@
 import requests
-from ScriptResult import EXECUTION_STATE_COMPLETED
+from ScriptResult import EXECUTION_STATE_COMPLETED, EXECUTION_STATE_FAILED
 from SiemplifyAction import SiemplifyAction
 from SiemplifyDataModel import EntityTypes
 from SiemplifyUtils import convert_dict_to_json_result_dict, output_handler
@@ -31,7 +31,7 @@ def main():
         if entity.entity_type == EntityTypes.ADDRESS
     ]
 
-    output_message = ""
+    output_message = "Successfully processed: "
     result_value = True
     status = EXECUTION_STATE_COMPLETED
     output_json = {}
@@ -42,17 +42,23 @@ def main():
         url = f"{url}{ipaddr}"
 
         res = requests.get(url, headers=headers)
+        
+        if res.status_code == 401:
+            output_message = "Unable to auth, please check API Key"
+            result_value = False
+            status = EXECUTION_STATE_FAILED
+            siemplify.end(output_message, result_value, status)
 
         siemplify.result.add_json(str(ipaddr), res.json())
 
         output_json[str(ipaddr)] = res.json()
 
-        if res.json()["riot"]:
+        if res.status_code == 200 and res.json()["riot"]:
             siemplify.add_entity_insight(
                 ipaddr, to_insight(res.json()), triggered_by=INTEGRATION_NAME
             )
 
-    output_message = "Successfully processed: {}".format(ips)
+        output_message = output_message + "{},".format(ipaddr)
 
     if output_json:
         siemplify.result.add_result_json(

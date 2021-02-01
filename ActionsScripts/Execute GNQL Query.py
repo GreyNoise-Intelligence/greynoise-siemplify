@@ -7,7 +7,7 @@ from SiemplifyUtils import convert_dict_to_json_result_dict, output_handler
 
 INTEGRATION_NAME = "GreyNoise"
 
-SCRIPT_NAME = "Quick IP Lookup"
+SCRIPT_NAME = "Execute GNQL Query"
 
 
 @output_handler
@@ -26,37 +26,35 @@ def main():
         "User-Agent": "siemplify-v1.0.0",
     }
 
-    ips = [
-        entity
-        for entity in siemplify.target_entities
-        if entity.entity_type == EntityTypes.ADDRESS
-    ]
+    query = siemplify.extract_action_param(param_name="query", print_value=True)
+    limit = siemplify.extract_action_param(param_name="limit", default_value="10", is_mandatory=False, print_value=True)
 
-    output_message = "Successfully processed: "
+    output_message = ""
     result_value = True
     status = EXECUTION_STATE_COMPLETED
     output_json = {}
-    for ipaddr in ips:
-        siemplify.LOGGER.info("Started processing IP: {}".format(ipaddr))
-        url = "https://api.greynoise.io/v2/noise/quick/"
-        url = f"{url}{ipaddr}"
+    
 
-        res = requests.get(url, headers=headers)
+    siemplify.LOGGER.info("Running GreyNoise Query: {}".format(query))
+    url = ("https://api.greynoise.io/v2/experimental/gnql?query={}&size={}").format(query,limit)
+
+    res = requests.get(url, headers=headers)
         
-        if res.status_code == 401:
-            output_message = "Unable to auth, please check API Key"
-            result_value = False
-            status = EXECUTION_STATE_FAILED
-            siemplify.end(output_message, result_value, status)
-            
-        output = res.json()
-        output['message'] = CODE_MESSAGES[output['code']]
-
-        siemplify.result.add_json(str(ipaddr), output)
-
-        output_json[str(ipaddr)] = output
+    if res.status_code == 401:
+        output_message = "Unable to auth, please check API Key"
+        result_value = False
+        status = EXECUTION_STATE_FAILED
+        siemplify.end(output_message, result_value, status)
         
-        output_message = output_message + "{},".format(ipaddr)
+    output = res.json()
+
+    siemplify.result.add_json('query_result', output)
+
+    output_json['query_result'] = output
+    
+    total=output['count']
+    
+    output_message = "Successfully ran query: {} - Total Results: {} - Returned Results: {},".format(query,total,limit)
 
 
     if output_json:

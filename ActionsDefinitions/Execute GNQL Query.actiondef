@@ -1,0 +1,59 @@
+{
+  "Name": "Execute GNQL Query",
+  "Description": "Run a GreyNoise GNQL.",
+  "Script": "import requests\nfrom constants import CODE_MESSAGES\nfrom ScriptResult import EXECUTION_STATE_COMPLETED, EXECUTION_STATE_FAILED\nfrom SiemplifyAction import SiemplifyAction\nfrom SiemplifyDataModel import EntityTypes\nfrom SiemplifyUtils import convert_dict_to_json_result_dict, output_handler\n\nINTEGRATION_NAME = \"GreyNoise\"\n\nSCRIPT_NAME = \"Execute GNQL Query\"\n\n\n@output_handler\ndef main():\n    siemplify = SiemplifyAction()\n    siemplify.script_name = SCRIPT_NAME\n\n    api_key = siemplify.extract_configuration_param(\n        provider_name=INTEGRATION_NAME, param_name=\"GN API Key\"\n    )\n\n    headers = {\n        \"Accept\": \"application/json\",\n        \"Content-Type\": \"application/json\",\n        \"key\": api_key,\n        \"User-Agent\": \"siemplify-v1.0.0\",\n    }\n\n    query = siemplify.extract_action_param(param_name=\"query\", print_value=True)\n    limit = siemplify.extract_action_param(param_name=\"limit\", default_value=\"10\", is_mandatory=False, print_value=True)\n\n    output_message = \"\"\n    result_value = True\n    status = EXECUTION_STATE_COMPLETED\n    output_json = {}\n    \n\n    siemplify.LOGGER.info(\"Running GreyNoise Query: {}\".format(query))\n    url = (\"https://api.greynoise.io/v2/experimental/gnql?query={}&size={}\").format(query,limit)\n\n    res = requests.get(url, headers=headers)\n        \n    if res.status_code == 401:\n        output_message = \"Unable to auth, please check API Key\"\n        result_value = False\n        status = EXECUTION_STATE_FAILED\n        siemplify.end(output_message, result_value, status)\n        \n    output = res.json()\n\n    siemplify.result.add_json('query_result', output)\n\n    output_json['query_result'] = output\n    \n    total=output['count']\n    \n    output_message = \"Successfully ran query: {} - Total Results: {} - Returned Results: {},\".format(query,total,limit)\n\n\n    if output_json:\n        siemplify.result.add_result_json(\n            {\"results\": convert_dict_to_json_result_dict(output_json)}\n        )\n\n    siemplify.end(output_message, result_value, status)\n\n\nif __name__ == \"__main__\":\n    main()\n",
+  "IntegrationIdentifier": "GreyNoise",
+  "ScriptResultName": "success",
+  "DynamicResultsMetadata": [
+    {
+      "ResultName": "JsonResult",
+      "ResultExample": "{}",
+      "ShowResult": true
+    }
+  ],
+  "Creator": "Admin",
+  "IsEnabled": true,
+  "IsCustom": true,
+  "IsSystem": false,
+  "Version": 7.0,
+  "TimeoutSeconds": 300,
+  "Parameters": [
+    {
+      "CustomActionId": 0,
+      "IsMandatory": true,
+      "DefaultValue": "classification:malicious last_seen:1d",
+      "Description": "GreyNoise Query in GNQL format to execute",
+      "Name": "query",
+      "Value": "classification:malicious last_seen:1d",
+      "Type": 0,
+      "OptionalValues": null,
+      "OptionalValuesJson": null,
+      "Id": 0,
+      "CreationTimeUnixTimeInMs": 1612214837892,
+      "ModificationTimeUnixTimeInMs": 1612214837892
+    },
+    {
+      "CustomActionId": 0,
+      "IsMandatory": false,
+      "DefaultValue": "10",
+      "Description": "Maximum number of results to return, default is 10",
+      "Name": "limit",
+      "Value": "10",
+      "Type": 0,
+      "OptionalValues": null,
+      "OptionalValuesJson": null,
+      "Id": 0,
+      "CreationTimeUnixTimeInMs": 1612214837892,
+      "ModificationTimeUnixTimeInMs": 1612214837892
+    }
+  ],
+  "DefaultResultValue": "",
+  "PythonVersion": "None",
+  "SimulationData": {
+    "Entities": null
+  },
+  "SimulationDataJson": null,
+  "Id": 0,
+  "CreationTimeUnixTimeInMs": 1612214837884,
+  "ModificationTimeUnixTimeInMs": 1612214837886
+}
