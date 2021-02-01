@@ -1,13 +1,13 @@
 ---
 name: "🐞 Bug Report"
-about: Reporting a bug
-title: ''
+about: Reporting a bug title: ''
 labels: 'bug'
 ---
 
 <!--- Provide a general summary of the issue in the Title above -->
 
 ## Environment
+
 * Enrichment Version: <!--- Provide enrichment version -->
 * Expected Output: <!--- Provide the expected output -->
     ```
@@ -19,11 +19,14 @@ labels: 'bug'
     ```
 
 ## Possible Solution
+
 <!--- Not required, but suggest a fix/reason for the bug, -->
 
 ## Steps to Reproduce
+
 <!--- Provide a link to a live example, or an unambiguous set of steps to -->
 <!--- reproduce this bug. Include code to reproduce, if relevant -->
+
 1.
 2.
 3.
