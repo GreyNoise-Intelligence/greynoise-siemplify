@@ -7,7 +7,7 @@
   "DynamicResultsMetadata": [
     {
       "ResultName": "JsonResult",
-      "ResultExample": "{}",
+      "ResultExample": "{\"results\": [{\"Entity\": \"8.8.8.8\", \"EntityResult\": {\"ip\": \"8.8.8.8\", \"riot\": true, \"category\": \"public_dns\", \"name\": \"Google Public DNS\", \"description\": \"Google's global domain name system (DNS) resolution service.\", \"explanation\": \"Public DNS services are used as alternatives to ISP's name servers. You may see devices on your network communicating with Google Public DNS over port 53/TCP or 53/UDP to resolve DNS lookups.\", \"last_updated\": \"2021-02-03T17:57:02Z\", \"logo_url\": \"https://www.gstatic.com/devrel-devsite/prod/v9d82702993bc22f782b7874a0f933b5e39c1f0889acab7d1fce0d6deb8e0f63d/cloud/images/cloud-logo.svg\", \"reference\": \"https://developers.google.com/speed/public-dns/docs/isp#alternative\"}}]}",
       "ShowResult": true
     }
   ],
@@ -15,7 +15,7 @@
   "IsEnabled": true,
   "IsCustom": true,
   "IsSystem": false,
-  "Version": 7.0,
+  "Version": 10.0,
   "TimeoutSeconds": 300,
   "Parameters": [],
   "DefaultResultValue": "",
@@ -25,6 +25,6 @@
   },
   "SimulationDataJson": null,
   "Id": 0,
-  "CreationTimeUnixTimeInMs": 1612214763988,
-  "ModificationTimeUnixTimeInMs": 1612214763990
+  "CreationTimeUnixTimeInMs": 1612383999450,
+  "ModificationTimeUnixTimeInMs": 1612383999453
 }

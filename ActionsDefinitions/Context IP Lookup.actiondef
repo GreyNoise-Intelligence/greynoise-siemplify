@@ -7,7 +7,7 @@
   "DynamicResultsMetadata": [
     {
       "ResultName": "JsonResult",
-      "ResultExample": "{}",
+      "ResultExample": "{\"results\": [{\"Entity\": \"89.248.172.20\", \"EntityResult\": {\"ip\": \"89.248.172.20\", \"first_seen\": \"2021-01-06\", \"last_seen\": \"2021-02-03\", \"seen\": true, \"tags\": [\"Bitcoin Node Scanner\", \"Cassandra Scanner\"], \"actor\": \"unknown\", \"spoofable\": true, \"classification\": \"unknown\", \"cve\": null, \"vpn\": false, \"vpn_service\": \"\", \"metadata\": {\"asn\": \"AS202425\", \"city\": \"Amsterdam\", \"country\": \"Netherlands\", \"country_code\": \"NL\", \"organization\": \"IP Volume inc\", \"category\": \"isp\", \"tor\": false, \"rdns\": \"scanner.openportstats.com\", \"os\": \"unknown\", \"region\": \"North Holland\"}, \"raw_data\": {\"scan\": [{\"port\": 0, \"protocol\": \"TCP\"}, {\"port\": 1, \"protocol\": \"TCP\"}], \"web\": {}, \"ja3\": [], \"hassh\": []}}}]}",
       "ShowResult": true
     }
   ],
@@ -15,7 +15,7 @@
   "IsEnabled": true,
   "IsCustom": true,
   "IsSystem": false,
-  "Version": 14.0,
+  "Version": 17.0,
   "TimeoutSeconds": 300,
   "Parameters": [],
   "DefaultResultValue": "",
@@ -25,6 +25,6 @@
   },
   "SimulationDataJson": null,
   "Id": 0,
-  "CreationTimeUnixTimeInMs": 1612214806802,
-  "ModificationTimeUnixTimeInMs": 1612214806804
+  "CreationTimeUnixTimeInMs": 1612373464504,
+  "ModificationTimeUnixTimeInMs": 1612373464511
 }

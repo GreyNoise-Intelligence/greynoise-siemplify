@@ -7,7 +7,7 @@
   "DynamicResultsMetadata": [
     {
       "ResultName": "JsonResult",
-      "ResultExample": "{}",
+      "ResultExample": "{\"results\": [{\"Entity\": \"89.248.172.196\", \"EntityResult\": {\"ip\": \"89.248.172.196\", \"noise\": true, \"code\": \"0x02\", \"message\": \"IP has been observed scanning the GreyNoise sensor network, but has not completed a full connection, meaning this can be spoofed\"}}]}",
       "ShowResult": true
     }
   ],
@@ -15,7 +15,7 @@
   "IsEnabled": true,
   "IsCustom": true,
   "IsSystem": false,
-  "Version": 11.0,
+  "Version": 14.0,
   "TimeoutSeconds": 300,
   "Parameters": [],
   "DefaultResultValue": "",
@@ -25,6 +25,6 @@
   },
   "SimulationDataJson": null,
   "Id": 0,
-  "CreationTimeUnixTimeInMs": 1612214855286,
-  "ModificationTimeUnixTimeInMs": 1612214855288
+  "CreationTimeUnixTimeInMs": 1612384041919,
+  "ModificationTimeUnixTimeInMs": 1612384041922
 }

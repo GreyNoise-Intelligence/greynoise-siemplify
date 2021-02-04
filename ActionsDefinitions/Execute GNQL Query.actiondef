@@ -7,7 +7,7 @@
   "DynamicResultsMetadata": [
     {
       "ResultName": "JsonResult",
-      "ResultExample": "{}",
+      "ResultExample": "{\"results\": [{\"Entity\": \"query_result\", \"EntityResult\": {\"complete\": false, \"count\": 126828, \"data\": [{\"ip\": \"173.56.92.166\", \"seen\": true, \"classification\": \"malicious\", \"spoofable\": false, \"first_seen\": \"2021-01-06\", \"last_seen\": \"2021-02-03\", \"actor\": \"unknown\", \"vpn\": false, \"vpn_service\": \"\", \"tags\": [\"Generic IoT Brute Force Attempt\", \"HTTP Alt Scanner\", \"Mirai\", \"Telnet Bruteforcer\", \"Telnet Scanner\"], \"cve\": [], \"metadata\": {\"asn\": \"AS701\", \"city\": \"New York City\", \"country\": \"United States\", \"country_code\": \"US\", \"organization\": \"MCI Communications Services, Inc. d/b/a Verizon Business\", \"category\": \"isp\", \"tor\": false, \"rdns\": \"pool-173-56-92-166.nycmny.fios.verizon.net\", \"os\": \"Linux 2.2-3.x\", \"region\": \"New York\"}, \"raw_data\": {\"scan\": [{\"port\": 23, \"protocol\": \"TCP\"}, {\"port\": 81, \"protocol\": \"TCP\"}], \"web\": {}, \"ja3\": [], \"hassh\": null}}, {\"ip\": \"116.0.3.146\", \"seen\": true, \"classification\": \"malicious\", \"spoofable\": false, \"first_seen\": \"2019-10-22\", \"last_seen\": \"2021-02-03\", \"actor\": \"unknown\", \"vpn\": false, \"vpn_service\": \"\", \"tags\": [\"Looks Like EternalBlue\", \"SMB Scanner\"], \"cve\": [\"CVE-2017-0144\"], \"metadata\": {\"asn\": \"AS17454\", \"city\": \"Jakarta\", \"country\": \"Indonesia\", \"country_code\": \"ID\", \"organization\": \"PT Hasindo Net\", \"category\": \"isp\", \"tor\": false, \"rdns\": \"\", \"os\": \"Windows 7/8\", \"region\": \"Jakarta\"}, \"raw_data\": {\"scan\": [{\"port\": 445, \"protocol\": \"TCP\"}], \"web\": {}, \"ja3\": [], \"hassh\": null}}], \"message\": \"ok\", \"query\": \"classification:malicious last_seen:1d\", \"scroll\": \"DnF1ZXJ5VGhlbkZldGNoBQAAAAAk0abXFkFKSExEdUc4VEtta2syaGg2R3kzNGcAAAAAJNGm2BZBSkhMRHVHOFRLbWtrMmhoNkd5MzRnAAAAACTRptkWQUpITER1RzhUS21razJoaDZHeTM0ZwAAAAAk0abaFkFKSExEdUc4VEtta2syaGg2R3kzNGcAAAAAJNGm2xZBSkhMRHVHOFRLbWtrMmhoNkd5MzRn\"}}]}",
       "ShowResult": true
     }
   ],
@@ -15,7 +15,7 @@
   "IsEnabled": true,
   "IsCustom": true,
   "IsSystem": false,
-  "Version": 7.0,
+  "Version": 10.0,
   "TimeoutSeconds": 300,
   "Parameters": [
     {
@@ -29,8 +29,8 @@
       "OptionalValues": null,
       "OptionalValuesJson": null,
       "Id": 0,
-      "CreationTimeUnixTimeInMs": 1612214837892,
-      "ModificationTimeUnixTimeInMs": 1612214837892
+      "CreationTimeUnixTimeInMs": 1612384689888,
+      "ModificationTimeUnixTimeInMs": 1612384689888
     },
     {
       "CustomActionId": 0,
@@ -43,8 +43,8 @@
       "OptionalValues": null,
       "OptionalValuesJson": null,
       "Id": 0,
-      "CreationTimeUnixTimeInMs": 1612214837892,
-      "ModificationTimeUnixTimeInMs": 1612214837892
+      "CreationTimeUnixTimeInMs": 1612384689888,
+      "ModificationTimeUnixTimeInMs": 1612384689888
     }
   ],
   "DefaultResultValue": "",
@@ -54,6 +54,6 @@
   },
   "SimulationDataJson": null,
   "Id": 0,
-  "CreationTimeUnixTimeInMs": 1612214837884,
-  "ModificationTimeUnixTimeInMs": 1612214837886
+  "CreationTimeUnixTimeInMs": 1612384689870,
+  "ModificationTimeUnixTimeInMs": 1612384689873
 }

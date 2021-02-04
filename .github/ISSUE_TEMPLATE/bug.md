@@ -1,7 +1,9 @@
 ---
-name: "🐞 Bug Report"
-about: Reporting a bug title: ''
+name: '🐞 Bug Report'
+about: Reporting a bug
+title: ''
 labels: 'bug'
+assignees: 'bradchiappetta'
 ---
 
 <!--- Provide a general summary of the issue in the Title above -->

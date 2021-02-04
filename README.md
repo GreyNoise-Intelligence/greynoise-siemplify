@@ -1,14 +1,53 @@
 [![main](https://github.com/GreyNoise-Intelligence/os-template/workflows/Build/badge.svg)](https://github.com/GreyNoise-Intelligence/os-template/actions?query=workflow%3ABuild)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-# GreyNoise Open-Source Template
+# GreyNoise Siemplify Integration
 
-The GreyNoise OS template is used to create new open source repos. It contains standards we've set as a team at
-GreyNoise. Please feel free to add/modify as needed for specific languages/tools.
+The GreyNoise Siemplify Integration is a set of actions and connectors that can be used in the Siemplify platform.
+
+More details about Siemplify here: [https://www.siemplify.co/](https://www.siemplify.co/)
 
 ## Usage
 
-Insert details about usage of your tool, example are very helpful.
+### Initial Configuration
+In order to use the GreyNoise Integration for Siemplify, install the Integration from the Siemplify marketplace.  Then,
+configure the integration using a GreyNoise API key.
+
+If you don't have a GreyNoise API key, you can sign up for a free trial at 
+[https://viz.greynoise.io/signup](https://viz.greynoise.io/signup)
+
+### Actions
+
+The GreyNoise Actions allow for IPs to be queried in the different GreyNoise API endpoints and for a more complex 
+GNQL query to be executed as part of a Case workflow.
+
+#### Quick IP Lookup
+The Quick IP Lookup action is designed to take all Address entities associated with a case/alert and enrich them against
+the GreyNoise Quick API.
+
+#### Context IP Lookup
+The Context IP Lookup action is designed to take all Address entities associated with a case/alert and enrich them 
+against the GreyNoise Context API.
+
+#### RIOT IP Lookup
+The RIOT IP Lookup action is designed to take all Address entities associated with a case/alert and enrich them against
+the GreyNoise RIOT API.
+
+#### Execute GNQL Query
+The Execute GNQL Query action is designed to perform a GNQL query against the GreyNoise query endpoint and return all
+matching records, up to the supplied limit (default is 10 results).
+
+### Connectors
+
+The GreyNoise Connector allows for a GNQL to be used to generate alerts.
+
+#### Generate Alert from GreyNoise GNQL
+The Generate Alert from GreyNoise GNQL connector is primarily designed to be an alerting system for when GreyNoise
+begins observing mass-internet scanning activity of a monitored IP.  The primary use case is to query daily for a CIDR
+block, using a query similar to: `ip:85.32.32.0/24 last_seen:1d`
+
+Using a query similar to the above, this would generate an alert for an IP in the provided range if GreyNoise observes
+the IP performing mass-internet scanning.
 
 ## Contributing
 
@@ -22,14 +61,14 @@ the [tags on this repository](https://github.com/GreyNoise-Intelligence/os-templ
 
 ## Authors
 
-* **Your Name** - *Initial work* - [Your Github Handle](https://github.com/github-handle)
+* **Brad Chiappetta** - *Initial work* - [bradchiappetta](https://github.com/bradchiappetta)
 
 See also the list of [contributors](https://github.com/GreyNoise-Intelligence/os-template/contributors) who participated
 in this project.
 
 ## Acknowledgments
 
-* Person (https://github.com/github-handle) - reason
+* Siemplify Community and Support members for help with the intial development
 
 ## Links
 
