@@ -1,4 +1,5 @@
 import requests
+from constants import USER_AGENT
 from ScriptResult import EXECUTION_STATE_COMPLETED, EXECUTION_STATE_FAILED
 from SiemplifyAction import SiemplifyAction
 from SiemplifyDataModel import EntityTypes
@@ -22,7 +23,7 @@ def main():
         "Accept": "application/json",
         "Content-Type": "application/json",
         "key": api_key,
-        "User-Agent": "siemplify-v1.0.0",
+        "User-Agent": USER_AGENT,
     }
 
     ips = [
@@ -42,7 +43,7 @@ def main():
         url = f"{url}{ipaddr}"
 
         res = requests.get(url, headers=headers)
-        
+
         if res.status_code == 401:
             output_message = "Unable to auth, please check API Key"
             result_value = False
@@ -72,10 +73,14 @@ def to_insight(self):
     content = ""
     content += "<table style='100%'><tbody>"
     content += (
-        "<tr><td style='text-align: left; width: 30%;'><strong style='font-size: 17px'>"
-        "RIOT: <span>{noise}</span></strong></td>".format(noise=self["riot"])
+        "<tr><td style='text-align: left; width: 30%;'><strong style='font-size: 17px;"
+        "color:#7CFC00'><span>Likely Harmless Service</span></strong></td>"
     )
     content += "</tbody></table><br>"
+    content += (
+        "<p>This IP is from a known harmless services and/or organizations and can "
+        "most likely be trusted.</p></br>"
+    )
     content += "<table style='100%'><tbody>"
     content += (
         "<tr><td style='text-align: left; width: 30%;'><strong>Name: </strong></td>"
@@ -93,6 +98,12 @@ def to_insight(self):
         "<tr><td style='text-align: left; width: 30%;'><strong>Last Updated: </strong>"
         "</td><td style='text-align: left; width: 30%;'>{last_updated}</td></tr>".format(
             last_updated=self["last_updated"]
+        )
+    )
+    content += (
+        "<tr><td style='text-align: left; width: 30%;'><strong>Explanation: </strong>"
+        "</td><td style='text-align: left; width: 30%;'>{explanation}</td></tr>".format(
+            explanation=self["explanation"]
         )
     )
     content += "</tbody></table><br><br>"

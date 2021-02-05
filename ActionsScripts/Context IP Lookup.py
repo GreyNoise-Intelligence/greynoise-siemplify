@@ -1,5 +1,5 @@
 import requests
-from constants import CODE_MESSAGES
+from constants import CODE_MESSAGES, USER_AGENT
 from ScriptResult import EXECUTION_STATE_COMPLETED, EXECUTION_STATE_FAILED
 from SiemplifyAction import SiemplifyAction
 from SiemplifyDataModel import EntityTypes
@@ -23,7 +23,7 @@ def main():
         "Accept": "application/json",
         "Content-Type": "application/json",
         "key": api_key,
-        "User-Agent": "siemplify-v1.0.0",
+        "User-Agent": USER_AGENT,
     }
 
     ips = [
@@ -69,7 +69,7 @@ def main():
 
         else:
             output = res.json()
-            output['message'] = CODE_MESSAGES[output['code']]
+            output["message"] = CODE_MESSAGES[output["code"]]
             siemplify.result.add_json(str(ipaddr), output)
 
             output_json[str(ipaddr)] = output
@@ -90,12 +90,31 @@ def to_insight(self):
         "Noise: <span>{noise}</span></strong></td>".format(noise=self["seen"])
     )
     content += "</tbody></table><br>"
-    content += "<table style='100%'><tbody>"
     content += (
-        "<tr><td style='text-align: left; width: 30%;'><strong>Classification: </strong>"
-        "</td><td style='text-align: left; width: 30%;'>{classification}</td>"
-        "</tr>".format(classification=self["classification"])
+        "<p>This IP has been observed opportunistically scanning the internet "
+        "and is not directly targeting your organization.</p></br>"
     )
+    content += "<table style='100%'><tbody>"
+    if self["classification"] == "malicious":
+        content += (
+            "<tr><td style='text-align: left; width: 30%; color: red'><strong>"
+            "Classification: </strong></td><td style='text-align: left; width: 30%; "
+            "color: red'>{classification}</td>"
+            "</tr>".format(classification=self["classification"])
+        )
+    elif self["classification"] == "benign":
+        content += (
+            "<tr><td style='text-align: left; width: 30%; color: #7CFC00'><strong>"
+            "Classification: </strong></td><td style='text-align: left; width: 30%;"
+            " color: #7CFC00'>{classification}</td>"
+            "</tr>".format(classification=self["classification"])
+        )
+    else:
+        content += (
+            "<tr><td style='text-align: left; width: 30%;'><strong>Classification: "
+            "</strong></td><td style='text-align: left; width: 30%;'>{classification}"
+            "</td></tr>".format(classification=self["classification"])
+        )
     content += (
         "<tr><td style='text-align: left; width: 30%;'><strong>Last Seen: </strong></td>"
         "<td style='text-align: left; width: 30%;'>{last_seen}</td></tr>".format(

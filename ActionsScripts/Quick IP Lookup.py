@@ -1,5 +1,5 @@
 import requests
-from constants import CODE_MESSAGES
+from constants import CODE_MESSAGES, USER_AGENT
 from ScriptResult import EXECUTION_STATE_COMPLETED, EXECUTION_STATE_FAILED
 from SiemplifyAction import SiemplifyAction
 from SiemplifyDataModel import EntityTypes
@@ -23,7 +23,7 @@ def main():
         "Accept": "application/json",
         "Content-Type": "application/json",
         "key": api_key,
-        "User-Agent": "siemplify-v1.0.0",
+        "User-Agent": USER_AGENT,
     }
 
     ips = [
@@ -42,22 +42,21 @@ def main():
         url = f"{url}{ipaddr}"
 
         res = requests.get(url, headers=headers)
-        
+
         if res.status_code == 401:
             output_message = "Unable to auth, please check API Key"
             result_value = False
             status = EXECUTION_STATE_FAILED
             siemplify.end(output_message, result_value, status)
-            
+
         output = res.json()
-        output['message'] = CODE_MESSAGES[output['code']]
+        output["message"] = CODE_MESSAGES[output["code"]]
 
         siemplify.result.add_json(str(ipaddr), output)
 
         output_json[str(ipaddr)] = output
-        
-        output_message = output_message + "{},".format(ipaddr)
 
+        output_message = output_message + "{},".format(ipaddr)
 
     if output_json:
         siemplify.result.add_result_json(

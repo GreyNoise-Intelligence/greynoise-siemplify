@@ -22,3 +22,4 @@ CODE_MESSAGES = {
     ),
     "404": "IP is Invalid",
 }
+USER_AGENT = "greynoise-siemplify-v1.0.0"
