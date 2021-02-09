@@ -74,7 +74,7 @@ def to_insight(self):
     content += "<table style='100%'><tbody>"
     content += (
         "<tr><td style='text-align: left; width: 30%;'><strong style='font-size: 17px;"
-        "color:#7CFC00'><span>Likely Harmless Service</span></strong></td>"
+        "color:#7CFC00'><span>Benign Service</span></strong></td>"
     )
     content += "</tbody></table><br>"
     content += (

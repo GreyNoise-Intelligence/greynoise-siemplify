@@ -27,11 +27,11 @@ the GreyNoise Quick API.
 
 #### Context IP Lookup
 The Context IP Lookup action is designed to take all Address entities associated with a case/alert and enrich them 
-against the GreyNoise Context API.
+against the GreyNoise Context API.  It also provides an Insight on the Case for each IP entity that is found.
 
 #### RIOT IP Lookup
 The RIOT IP Lookup action is designed to take all Address entities associated with a case/alert and enrich them against
-the GreyNoise RIOT API.
+the GreyNoise RIOT API.  It also provides an Insight on the Case for each IP entity that is found.
 
 #### Execute GNQL Query
 The Execute GNQL Query action is designed to perform a GNQL query against the GreyNoise query endpoint and return all
@@ -68,7 +68,7 @@ in this project.
 
 ## Acknowledgments
 
-* Siemplify Community and Support members for help with the intial development
+* Siemplify Community and Support members for help with the initial development.
 
 ## Links
 

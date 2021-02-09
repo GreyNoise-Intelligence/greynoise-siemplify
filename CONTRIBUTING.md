@@ -28,7 +28,7 @@ We appreciate PRs but encourage you to follow these guidelines for the reviewer:
 * Add/update tests for the code modified.
 * PRs should be kept small and cohesive. If you're making bigger change, consider chunking up the PR into small pieces.
 
-Github actions are use to run tests on the latest ubuntu:20.04 image.
+Github actions are used to run tests on the latest ubuntu:20.04 image.
 
 Commits
 -------
@@ -38,11 +38,11 @@ commit message. This [guide](https://chris.beams.io/posts/git-commit/) by Chris 
 to learn more.
 
 However, don't fret over this too much. You can also just accumulate commits without much thought for this rule. All
-commits in a PR can be squashed into a single commit upon merging. But it is still appreciated if the commit message
+commits in a PR can be squashed into a single commit upon merging. It is still appreciated if the commit message
 doesn't need to be rewritten.
 
 Releases
 --------
 
 * Use tags for each Github release.
-* Avoid checking in large files into the repo. Instead attach files as artifacts to Github releases.
+* Avoid checking in large files into the repo. Instead, attach files as artifacts to Github releases.
