@@ -1,4 +1,5 @@
 [![main](https://github.com/GreyNoise-Intelligence/greynoise-siemplify/workflows/Build/badge.svg)](https://github.com/GreyNoise-Intelligence/greynoise-siemplify/actions?query=workflow%3ABuild)
+[![main](https://github.com/GreyNoise-Intelligence/greynoise-siemplify/workflows/python_linters/badge.svg)](https://github.com/GreyNoise-Intelligence/greynoise-siemplify/actions?query=workflow%3Apython_linters)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 # GreyNoise Siemplify Integration
