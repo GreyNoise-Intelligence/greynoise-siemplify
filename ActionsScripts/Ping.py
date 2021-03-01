@@ -1,4 +1,5 @@
 import requests
+from constants import USER_AGENT
 from SiemplifyAction import SiemplifyAction
 from SiemplifyUtils import output_handler
 
@@ -20,7 +21,7 @@ def main():
         "Accept": "application/json",
         "Content-Type": "application/json",
         "key": api_key,
-        "User-Agent": "siemplify-v1.0.0",
+        "User-Agent": USER_AGENT,
     }
     url = "https://api.greynoise.io/v2/meta/ping"
 
