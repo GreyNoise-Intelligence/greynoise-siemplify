@@ -135,7 +135,7 @@ def to_insight(self):
     )
     content += "</tbody></table><br><br>"
     content += (
-        '<p><strong>More Info: <a target="_blank" href=https://viz.greynoise.io/riot/'
+        '<p><strong>More Info: <a target="_blank" href=https://viz.greynoise.io/ip/'
         "{ip}>https://viz.greynoise.io/ip/{ip}</a></strong>&nbsp; </p>".format(
             ip=self["ip"]
         )
