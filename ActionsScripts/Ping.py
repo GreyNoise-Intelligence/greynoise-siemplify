@@ -23,7 +23,7 @@ def main():
         "key": api_key,
         "User-Agent": USER_AGENT,
     }
-    url = "https://api.greynoise.io/v2/meta/ping"
+    url = "https://api.greynoise.io/ping"
 
     res = requests.get(url, headers=headers)
     res.raise_for_status()
