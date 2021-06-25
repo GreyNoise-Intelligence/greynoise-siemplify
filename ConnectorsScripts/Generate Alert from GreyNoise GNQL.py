@@ -1,3 +1,4 @@
+from constants import USER_AGENT
 from SiemplifyConnectors import SiemplifyConnectorExecution
 from SiemplifyConnectorsDataModel import AlertInfo
 from SiemplifyUtils import output_handler, unix_now
@@ -35,7 +36,7 @@ def main(is_test_run):
         "Accept": "application/json",
         "Content-Type": "application/json",
         "key": api_key,
-        "User-Agent": "siemplify-v1.0.0",
+        "User-Agent": USER_AGENT,
     }
 
     siemplify.LOGGER.info("------------------- Main - Started -------------------")
@@ -67,6 +68,11 @@ def main(is_test_run):
                 if created_alert is not None:
                     alerts.append(created_alert)
                     siemplify.LOGGER.info(f"Added Alert {alert_id} to package results")
+        elif res.status_code == 401:
+            siemplify.LOGGER.error(
+                "Unable to auth, please check API Key.  This action requires a Paid Subscription."
+            )
+            alerts = {}
 
     except Exception as e:
         siemplify.LOGGER.error(

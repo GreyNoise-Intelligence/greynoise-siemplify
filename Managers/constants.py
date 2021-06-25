@@ -20,6 +20,8 @@ CODE_MESSAGES = {
         "IP was classified as noise, but has not been observed "
         "engaging in Internet-wide scans or attacks in over 60 days"
     ),
+    "0x09": "IP was found in RIOT",
+    "0x10": "IP has been observed by the GreyNoise sensor network and is in RIOT",
     "404": "IP is Invalid",
 }
-USER_AGENT = "greynoise-siemplify-v1.0.0"
+USER_AGENT = "greynoise-siemplify-v2.0"

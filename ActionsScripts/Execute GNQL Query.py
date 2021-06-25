@@ -43,7 +43,7 @@ def main():
     res = requests.get(url, headers=headers)
 
     if res.status_code == 401:
-        output_message = "Unable to auth, please check API Key"
+        output_message = "Unable to auth, please check API Key.  This action requires a Paid Subscription."
         result_value = False
         status = EXECUTION_STATE_FAILED
         siemplify.end(output_message, result_value, status)
