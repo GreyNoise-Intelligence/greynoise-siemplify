@@ -1,5 +1,8 @@
-import requests
 from constants import USER_AGENT
+from datetime import datetime
+from greynoise import GreyNoise
+from greynoise.exceptions import RequestFailure
+from ScriptResult import EXECUTION_STATE_COMPLETED, EXECUTION_STATE_FAILED
 from SiemplifyAction import SiemplifyAction
 from SiemplifyUtils import output_handler
 
@@ -17,21 +20,36 @@ def main():
         provider_name=INTEGRATION_NAME, param_name="GN API Key"
     )
 
-    headers = {
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-        "key": api_key,
-        "User-Agent": USER_AGENT,
-    }
-    url = "https://api.greynoise.io/ping"
+    session = GreyNoise(api_key=api_key, integration_name=USER_AGENT)
+    result_value = True
+    status = EXECUTION_STATE_COMPLETED
+    try:
+        res = session.test_connection()
+        expires = datetime.strptime(res["expiration"], "%Y-%m-%d")
+        now = datetime.today()
+        print(now, expires)
+        if res["offering"] != "community" and expires > now:
+            # is valid enterprise api key
+            siemplify.LOGGER.info("Connectivy Response: {}".format(res))
+            output_message = "Successful Connection"
+        elif res["offering"] != "community" and expires < now:
+            # is expired enterprise api key
+            siemplify.LOGGER.info("Unable to auth, API Key appears to be expired")
+            output_message = "Unable to auth, API Key appears to be expired"
+            result_value = False
+            status = EXECUTION_STATE_FAILED
+        else:
+            # is a community api key
+            siemplify.LOGGER.info("Connectivy Response: {}".format(res))
+            output_message = "Successful Connection"
 
-    res = requests.get(url, headers=headers)
-    res.raise_for_status()
+    except RequestFailure as e:
+        siemplify.LOGGER.info("Unable to auth, please check API Key")
+        output_message = "Unable to auth, please check API Key"
+        result_value = False
+        status = EXECUTION_STATE_FAILED
 
-    if "ApiKey authenticate failed" in res.content.decode("utf-8"):
-        raise Exception("Error, bad credentials")
-
-    siemplify.end("Successful Connection", True)
+    siemplify.end(output_message, result_value, status)
 
 
 if __name__ == "__main__":

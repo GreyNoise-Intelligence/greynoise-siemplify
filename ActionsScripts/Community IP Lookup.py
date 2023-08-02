@@ -1,5 +1,6 @@
-import requests
-from constants import USER_AGENT
+from constants import COMMUNITY_USER_AGENT
+from greynoise import GreyNoise
+from greynoise.exceptions import RateLimitError, RequestFailure
 from ScriptResult import EXECUTION_STATE_COMPLETED, EXECUTION_STATE_FAILED
 from SiemplifyAction import SiemplifyAction
 from SiemplifyDataModel import EntityTypes
@@ -19,74 +20,81 @@ def main():
         provider_name=INTEGRATION_NAME, param_name="GN API Key"
     )
 
-    headers = {
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-        "key": api_key,
-        "User-Agent": "community-" + USER_AGENT,
-    }
+    session = GreyNoise(
+        api_key=api_key, integration_name=COMMUNITY_USER_AGENT, offering="community"
+    )
 
     ips = [
-        entity
-        for entity in siemplify.target_entities
-        if entity.entity_type == EntityTypes.ADDRESS
+        entity for entity in siemplify.target_entities if entity.entity_type == EntityTypes.ADDRESS
     ]
 
-    output_message = "Successfully processed: "
+    output_message = "Successfully processed:"
     result_value = True
     status = EXECUTION_STATE_COMPLETED
     output_json = {}
-    community_url = "https://api.greynoise.io/v3/community/"
+    invalid_ips = []
     for ipaddr in ips:
         siemplify.LOGGER.info("Started processing IP: {}".format(ipaddr))
-        url = f"{community_url}{ipaddr}"
 
-        res = requests.get(url, headers=headers)
+        try:
+            res = session.ip(ipaddr)
 
-        if res.status_code == 200 and res.json()["noise"]:
+            if res and res["noise"]:
+                siemplify.result.add_json(str(ipaddr), res)
+                output = res
+                output_json[str(ipaddr)] = output
+                siemplify.add_entity_insight(
+                    ipaddr, to_noise_insight(output), triggered_by=INTEGRATION_NAME
+                )
+                output_message = output_message + " {},".format(ipaddr)
 
-            siemplify.result.add_json(str(ipaddr), res.json())
+            elif res and res["riot"]:
+                siemplify.result.add_json(str(ipaddr), res)
+                output = res
+                output_json[str(ipaddr)] = output
+                siemplify.add_entity_insight(
+                    ipaddr, to_riot_insight(output), triggered_by=INTEGRATION_NAME
+                )
 
-            output = res.json()
+                output_message = output_message + " {},".format(ipaddr)
 
-            output_json[str(ipaddr)] = output
+        except ValueError as e:
+            siemplify.LOGGER.info("Invalid Routable IP: {}".format(ipaddr))
+            invalid_ips.append(ipaddr)
+            continue
 
-            siemplify.add_entity_insight(
-                ipaddr, to_noise_insight(output), triggered_by=INTEGRATION_NAME
-            )
-
-            output_message = output_message + "{},".format(ipaddr)
-
-        elif res.status_code == 200 and res.json()["riot"]:
-
-            siemplify.result.add_json(str(ipaddr), res.json())
-
-            output = res.json()
-
-            output_json[str(ipaddr)] = output
-
-            siemplify.add_entity_insight(
-                ipaddr, to_riot_insight(output), triggered_by=INTEGRATION_NAME
-            )
-
-            output_message = output_message + "{},".format(ipaddr)
-
-        elif res.status_code == 401:
+        except RequestFailure as e:
+            siemplify.LOGGER.info("Unable to auth, please check API Key")
             output_message = "Unable to auth, please check API Key"
             result_value = False
             status = EXECUTION_STATE_FAILED
-            siemplify.end(output_message, result_value, status)
+            break
 
-        else:
-            output = res.json()
-            siemplify.result.add_json(str(ipaddr), output)
+        except RateLimitError as e:
+            siemplify.LOGGER.info("Daily rate limit reached, please check API Key")
+            output_message = "Daily rate limit reached, please check API Key"
+            result_value = False
+            status = EXECUTION_STATE_FAILED
+            break
 
-            output_json[str(ipaddr)] = output
+        except Exception:
+            siemplify.LOGGER.info("Unknown Error Occurred")
+            output_message = "Unknown Error Occurred"
+            result_value = False
+            status = EXECUTION_STATE_FAILED
+            break
 
     if output_json:
-        siemplify.result.add_result_json(
-            {"results": convert_dict_to_json_result_dict(output_json)}
-        )
+        siemplify.result.add_result_json({"results": convert_dict_to_json_result_dict(output_json)})
+
+    if invalid_ips and result_value:
+        invalid_ips_string = ""
+        for item in invalid_ips:
+            if invalid_ips_string == "":
+                invalid_ips_string = str(item)
+            else:
+                invalid_ips_string = invalid_ips_string + ", " + str(item)
+        output_message = output_message + " Invalid IPs skipped: {}".format(invalid_ips_string)
 
     siemplify.end(output_message, result_value, status)
 
@@ -113,9 +121,9 @@ def to_noise_insight(self):
         )
     elif self["classification"] == "benign":
         content += (
-            "<tr><td style='text-align: left; width: 30%; color: #7CFC00'><strong>"
+            "<tr><td style='text-align: left; width: 30%; color: #1dbf11'><strong>"
             "Classification: </strong></td><td style='text-align: left; width: 30%;"
-            " color: #7CFC00'>{classification}</td>"
+            " color: #1dbf11'>{classification}</td>"
             "</tr>".format(classification=self["classification"])
         )
     else:
@@ -126,9 +134,7 @@ def to_noise_insight(self):
         )
     content += (
         "<tr><td style='text-align: left; width: 30%;'><strong>Name: </strong></td>"
-        "<td style='text-align: left; width: 30%;'>{name}</td></tr>".format(
-            name=self["name"]
-        )
+        "<td style='text-align: left; width: 30%;'>{name}</td></tr>".format(name=self["name"])
     )
     content += (
         "<tr><td style='text-align: left; width: 30%;'><strong>Last Seen: </strong></td>"
@@ -139,9 +145,7 @@ def to_noise_insight(self):
     content += "</tbody></table><br><br>"
     content += (
         '<p><strong>More Info: <a target="_blank" href=https://viz.greynoise.io/ip/'
-        "{ip}>https://viz.greynoise.io/ip/{ip}</a></strong>&nbsp; </p>".format(
-            ip=self["ip"]
-        )
+        "{ip}>https://viz.greynoise.io/ip/{ip}</a></strong>&nbsp; </p>".format(ip=self["ip"])
     )
 
     return content
@@ -152,19 +156,16 @@ def to_riot_insight(self):
     content += "<table style='100%'><tbody>"
     content += (
         "<tr><td style='text-align: left; width: 30%;'><strong style='font-size: 17px;"
-        "color:#7CFC00'><span>Benign Service</span></strong></td>"
+        "color:#1dbf11'><span>Common Business Service</span></strong></td>"
     )
     content += "</tbody></table><br>"
     content += (
-        "<p>This IP is from a known harmless services and/or organizations and can "
-        "most likely be trusted.</p></br>"
+        "<p>This IP is from a known business services and can " "most likely be trusted.</p></br>"
     )
     content += "<table style='100%'><tbody>"
     content += (
         "<tr><td style='text-align: left; width: 30%;'><strong>Name: </strong></td>"
-        "<td style='text-align: left; width: 30%;'>{name}</td></tr>".format(
-            name=self["name"]
-        )
+        "<td style='text-align: left; width: 30%;'>{name}</td></tr>".format(name=self["name"])
     )
     content += (
         "<tr><td style='text-align: left; width: 30%;'><strong>Last Updated: </strong>"
@@ -175,9 +176,7 @@ def to_riot_insight(self):
     content += "</tbody></table><br><br>"
     content += (
         '<p><strong>More Info: <a target="_blank" href=https://viz.greynoise.io/riot/'
-        "{ip}>https://viz.greynoise.io/riot/{ip}</a></strong>&nbsp; </p>".format(
-            ip=self["ip"]
-        )
+        "{ip}>https://viz.greynoise.io/ip/{ip}</a></strong>&nbsp; </p>".format(ip=self["ip"])
     )
 
     return content

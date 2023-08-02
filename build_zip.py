@@ -1,15 +1,22 @@
-from zipfile import ZipFile
+import zipfile
+import glob
 
 zip_file = "zips/GreyNoise.zip"
 # create a ZipFile object
-zipObj = ZipFile(zip_file, "w")
+zipObj = zipfile.ZipFile(zip_file, "w", zipfile.ZIP_DEFLATED)
 # Add multiple files to the zip
-zipObj.write("ActionsDefinitions/")
-zipObj.write("ActionsScripts/")
-zipObj.write("Connectors/")
-zipObj.write("ConnectorsScripts/")
-zipObj.write("Dependencies/")
-zipObj.write("Managers/")
+for file in glob.glob("ActionsDefinitions/*"):
+    zipObj.write(file)
+for file in glob.glob("ActionsScripts/*"):
+    zipObj.write(file)
+for file in glob.glob("Connectors/*"):
+    zipObj.write(file)
+for file in glob.glob("ConnectorsScripts/*"):
+    zipObj.write(file)
+for file in glob.glob("Dependencies/*"):
+    zipObj.write(file)
+for file in glob.glob("Managers/*"):
+    zipObj.write(file)
 zipObj.write("Integration-GreyNoise.def")
 # close the Zip File
 zipObj.close()

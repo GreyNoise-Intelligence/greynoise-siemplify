@@ -8,7 +8,7 @@ from SiemplifyUtils import convert_dict_to_json_result_dict, output_handler
 
 INTEGRATION_NAME = "GreyNoise"
 
-SCRIPT_NAME = "RIOT IP Lookup"
+SCRIPT_NAME = "IP Similarity Lookup"
 
 
 @output_handler
@@ -26,6 +26,28 @@ def main():
         entity for entity in siemplify.target_entities if entity.entity_type == EntityTypes.ADDRESS
     ]
 
+    minimum_score = siemplify.extract_action_param(
+        param_name="minimum_score", default_value="90", is_mandatory=False, print_value=True
+    )
+    try:
+        minimum_score = int(minimum_score)
+    except:
+        siemplify.LOGGER.info("Minimum Score does not appear to be a valid value")
+        output_message = "Minimum Score does not appear to be a valid value"
+        result_value = False
+        status = EXECUTION_STATE_FAILED
+
+    limit = siemplify.extract_action_param(
+        param_name="limit", default_value="50", is_mandatory=False, print_value=True
+    )
+    try:
+        limit = int(limit)
+    except:
+        siemplify.LOGGER.info("Limit does not appear to be a valid value")
+        output_message = "Limit does not appear to be a valid value"
+        result_value = False
+        status = EXECUTION_STATE_FAILED
+
     output_message = "Successfully processed:"
     result_value = True
     status = EXECUTION_STATE_COMPLETED
@@ -35,9 +57,9 @@ def main():
         siemplify.LOGGER.info("Started processing IP: {}".format(ipaddr))
 
         try:
-            res = session.riot(ipaddr)
+            res = session.similar(ipaddr, min_score=minimum_score, limit=limit)
 
-            if res["riot"]:
+            if "similar_ips" in res:
                 siemplify.result.add_json(str(ipaddr), res)
                 output = res
                 output_json[str(ipaddr)] = output
@@ -48,14 +70,13 @@ def main():
                 output_message = output_message + " {},".format(ipaddr)
             else:
                 output = res
-                output[
-                    "message"
-                ] = "Address is not associated with a known Common Business Service."
+                output["message"] = "Address has no similarity results."
                 siemplify.result.add_json(str(ipaddr), output)
 
             output_json[str(ipaddr)] = output
 
         except ValueError as e:
+            siemplify.LOGGER.info(e)
             siemplify.LOGGER.info("Invalid Routable IP: {}".format(ipaddr))
             invalid_ips.append(ipaddr)
             continue
@@ -74,7 +95,8 @@ def main():
             status = EXECUTION_STATE_FAILED
             break
 
-        except Exception:
+        except Exception as e:
+            siemplify.LOGGER.info(e)
             siemplify.LOGGER.info("Unknown Error Occurred")
             output_message = "Unknown Error Occurred"
             result_value = False
@@ -100,42 +122,27 @@ def to_insight(self):
     content = ""
     content += "<table style='100%'><tbody>"
     content += (
-        "<tr><td style='text-align: left; width: 30%;'><strong style='font-size: 17px;"
-        "color:#7CFC00'><span>Benign Service</span></strong></td>"
+        "<tr><td style='text-align: left;'><strong style='font-size: 17px'>"
+        "Total Number of Similar IPs: <span>{total}</span></strong></td>".format(
+            total=self["total"]
+        )
     )
     content += "</tbody></table><br>"
+    content += "<table style='100%'; border='1'; cellpadding='5'; cellspacing='5'><tbody>"
+    content += "<tr><th style='text-align:left'>IP</th><th style='text-align:left'>Score</th><th style='text-align:left'>Feature Match</th></tr>"
+    for item in self["similar_ips"][:10]:
+        content += "<tr><td width='40%'>{ip}</td><td width='15%'>{score}</td><td>{feature}</td></tr>".format(
+            ip=item["ip"], score=round(item["score"] * 100), feature=", ".join(item["features"])
+        )
+    content += "</tbody></table><br>"
+    content += "<p>Only first 10 matches are displayed</p><br><br>"
     content += (
-        "<p>This IP is from a known harmless services and/or organizations and can "
-        "most likely be trusted.</p></br>"
-    )
-    content += "<table style='100%'><tbody>"
-    content += (
-        "<tr><td style='text-align: left; width: 30%;'><strong>Name: </strong></td>"
-        "<td style='text-align: left; width: 30%;'>{name}</td></tr>".format(name=self["name"])
-    )
-    content += (
-        "<tr><td style='text-align: left; width: 30%;'><strong>Category: </strong></td>"
-        "<td style='text-align: left; width: 30%;'>{category}</td></tr>".format(
-            category=self["category"]
+        '<p><strong>More Info: <a target="_blank" href=https://viz.greynoise.io/ip-similarity/'
+        "{ip}>https://viz.greynoise.io/ip-similarity/{ip}</a></strong>&nbsp; </p>".format(
+            ip=self["ip"]["ip"]
         )
     )
-    content += (
-        "<tr><td style='text-align: left; width: 30%;'><strong>Last Updated: </strong>"
-        "</td><td style='text-align: left; width: 30%;'>{last_updated}</td></tr>".format(
-            last_updated=self["last_updated"]
-        )
-    )
-    content += (
-        "<tr><td style='text-align: left; width: 30%;'><strong>Explanation: </strong>"
-        "</td><td style='text-align: left; width: 30%;'>{explanation}</td></tr>".format(
-            explanation=self["explanation"]
-        )
-    )
-    content += "</tbody></table><br><br>"
-    content += (
-        '<p><strong>More Info: <a target="_blank" href=https://viz.greynoise.io/riot/'
-        "{ip}>https://viz.greynoise.io/riot/{ip}</a></strong>&nbsp; </p>".format(ip=self["ip"])
-    )
+
     return content
 
 
