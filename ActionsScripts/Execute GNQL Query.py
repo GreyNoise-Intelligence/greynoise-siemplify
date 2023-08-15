@@ -15,16 +15,12 @@ def main():
     siemplify = SiemplifyAction()
     siemplify.script_name = SCRIPT_NAME
 
-    api_key = siemplify.extract_configuration_param(
-        provider_name=INTEGRATION_NAME, param_name="GN API Key"
-    )
+    api_key = siemplify.extract_configuration_param(provider_name=INTEGRATION_NAME, param_name="GN API Key")
 
     session = GreyNoise(api_key=api_key, integration_name=USER_AGENT)
 
     query = siemplify.extract_action_param(param_name="query", print_value=True)
-    limit = siemplify.extract_action_param(
-        param_name="limit", default_value="10", is_mandatory=False, print_value=True
-    )
+    limit = siemplify.extract_action_param(param_name="limit", default_value="10", is_mandatory=False, print_value=True)
 
     output_message = ""
     result_value = True
@@ -38,13 +34,9 @@ def main():
         siemplify.result.add_json("query_result", output)
         output_json["query_result"] = output
         total = output["count"]
-        output_message = (
-            "Successfully ran query: {} - Total Results: {} - "
-            "Returned Results: {},".format(query, total, limit)
+        output_message = "Successfully ran query: {} - Total Results: {} - " "Returned Results: {},".format(
+            query, total, limit
         )
-    except ValueError as e:
-        siemplify.LOGGER.info("Invalid Routable IP: {}".format(ipaddr))
-        invalid_ips.append(ipaddr)
 
     except RequestFailure as e:
         if "401" in str(e):
@@ -56,13 +48,14 @@ def main():
         result_value = False
         status = EXECUTION_STATE_FAILED
 
-    except RateLimitError as e:
+    except RateLimitError:
         siemplify.LOGGER.info("Daily rate limit reached, please check API Key")
         output_message = "Daily rate limit reached, please check API Key"
         result_value = False
         status = EXECUTION_STATE_FAILED
 
-    except Exception:
+    except Exception as e:
+        siemplify.LOGGER.info(e)
         siemplify.LOGGER.info("Unknown Error Occurred")
         output_message = "Unknown Error Occurred"
         result_value = False

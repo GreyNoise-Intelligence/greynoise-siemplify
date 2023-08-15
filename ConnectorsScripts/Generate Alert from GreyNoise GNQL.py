@@ -1,7 +1,6 @@
 from constants import USER_AGENT
 from greynoise import GreyNoise
-from greynoise.exceptions import RateLimitError, RequestFailure
-from ScriptResult import EXECUTION_STATE_COMPLETED, EXECUTION_STATE_FAILED
+from greynoise.exceptions import RequestFailure
 from SiemplifyConnectors import SiemplifyConnectorExecution
 from SiemplifyConnectorsDataModel import AlertInfo
 from SiemplifyUtils import output_handler, unix_now
@@ -21,16 +20,12 @@ def main(is_test_run):
     siemplify.script_name = CONNECTOR_NAME
 
     if is_test_run:
-        siemplify.LOGGER.info(
-            '***** This is an "IDE Play Button Run Connector once" test run ******'
-        )
+        siemplify.LOGGER.info('***** This is an "IDE Play Button Run Connector once" test run ******')
 
     siemplify.LOGGER.info("==================== Main - Param Init ====================")
 
     query = siemplify.extract_connector_param("query", print_value=True)
-    limit = siemplify.extract_connector_param(
-        "limit", default_value="10", is_mandatory=False, print_value=True
-    )
+    limit = siemplify.extract_connector_param("limit", default_value="10", is_mandatory=False, print_value=True)
     api_key = siemplify.extract_connector_param("GN API Key", print_value=False)
 
     session = GreyNoise(api_key=api_key, integration_name=USER_AGENT)
@@ -50,9 +45,7 @@ def main(is_test_run):
                 # Creating the event by calling create_event() function
                 created_event = create_event(siemplify, alert_id, result, datetime_in_unix_time)
                 # Creating the alert by calling create_alert() function
-                created_alert = create_alert(
-                    siemplify, alert_id, result, datetime_in_unix_time, created_event
-                )
+                created_alert = create_alert(siemplify, alert_id, result, datetime_in_unix_time, created_event)
 
                 # Checking that the created_alert is not None
                 if created_alert is not None:
@@ -60,9 +53,7 @@ def main(is_test_run):
                     siemplify.LOGGER.info(f"Added Alert {alert_id} to package results")
     except RequestFailure as e:
         if "401" in str(e):
-            siemplify.LOGGER.error(
-                "Unable to auth, please check API Key.  This action requires a Paid Subscription."
-            )
+            siemplify.LOGGER.error("Unable to auth, please check API Key.  This action requires a Paid Subscription.")
         else:
             siemplify.LOGGER.error("There was an issue with your query: {}".format(e))
         siemplify.LOGGER.exception(e)
@@ -111,9 +102,7 @@ def create_event(siemplify, alert_id, result, datetime_in_unix_time):
     """
     Returns the digested data of a single unread email
     """
-    siemplify.LOGGER.info(
-        f"--- Started processing Event:" f"  alert_id: {alert_id} | event_id: {alert_id}"
-    )
+    siemplify.LOGGER.info(f"--- Started processing Event:" f"  alert_id: {alert_id} | event_id: {alert_id}")
     event = {}
     event["StartTime"] = datetime_in_unix_time
     event["EndTime"] = datetime_in_unix_time
@@ -124,9 +113,7 @@ def create_event(siemplify, alert_id, result, datetime_in_unix_time):
     event["EventTime"] = result["last_seen"]
     event["Classification"] = result["classification"]
 
-    siemplify.LOGGER.info(
-        f"--- Finished processing Event:" f" alert_id: {alert_id} | event_id: {alert_id}"
-    )
+    siemplify.LOGGER.info(f"--- Finished processing Event:" f" alert_id: {alert_id} | event_id: {alert_id}")
     return event
 
 

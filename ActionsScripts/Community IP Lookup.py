@@ -16,17 +16,11 @@ def main():
     siemplify = SiemplifyAction()
     siemplify.script_name = SCRIPT_NAME
 
-    api_key = siemplify.extract_configuration_param(
-        provider_name=INTEGRATION_NAME, param_name="GN API Key"
-    )
+    api_key = siemplify.extract_configuration_param(provider_name=INTEGRATION_NAME, param_name="GN API Key")
 
-    session = GreyNoise(
-        api_key=api_key, integration_name=COMMUNITY_USER_AGENT, offering="community"
-    )
+    session = GreyNoise(api_key=api_key, integration_name=COMMUNITY_USER_AGENT, offering="community")
 
-    ips = [
-        entity for entity in siemplify.target_entities if entity.entity_type == EntityTypes.ADDRESS
-    ]
+    ips = [entity for entity in siemplify.target_entities if entity.entity_type == EntityTypes.ADDRESS]
 
     output_message = "Successfully processed:"
     result_value = True
@@ -43,41 +37,38 @@ def main():
                 siemplify.result.add_json(str(ipaddr), res)
                 output = res
                 output_json[str(ipaddr)] = output
-                siemplify.add_entity_insight(
-                    ipaddr, to_noise_insight(output), triggered_by=INTEGRATION_NAME
-                )
+                siemplify.add_entity_insight(ipaddr, to_noise_insight(output), triggered_by=INTEGRATION_NAME)
                 output_message = output_message + " {},".format(ipaddr)
 
             elif res and res["riot"]:
                 siemplify.result.add_json(str(ipaddr), res)
                 output = res
                 output_json[str(ipaddr)] = output
-                siemplify.add_entity_insight(
-                    ipaddr, to_riot_insight(output), triggered_by=INTEGRATION_NAME
-                )
+                siemplify.add_entity_insight(ipaddr, to_riot_insight(output), triggered_by=INTEGRATION_NAME)
 
                 output_message = output_message + " {},".format(ipaddr)
 
-        except ValueError as e:
+        except ValueError:
             siemplify.LOGGER.info("Invalid Routable IP: {}".format(ipaddr))
             invalid_ips.append(ipaddr)
             continue
 
-        except RequestFailure as e:
+        except RequestFailure:
             siemplify.LOGGER.info("Unable to auth, please check API Key")
             output_message = "Unable to auth, please check API Key"
             result_value = False
             status = EXECUTION_STATE_FAILED
             break
 
-        except RateLimitError as e:
+        except RateLimitError:
             siemplify.LOGGER.info("Daily rate limit reached, please check API Key")
             output_message = "Daily rate limit reached, please check API Key"
             result_value = False
             status = EXECUTION_STATE_FAILED
             break
 
-        except Exception:
+        except Exception as e:
+            siemplify.LOGGER.info(e)
             siemplify.LOGGER.info("Unknown Error Occurred")
             output_message = "Unknown Error Occurred"
             result_value = False
@@ -138,9 +129,7 @@ def to_noise_insight(self):
     )
     content += (
         "<tr><td style='text-align: left; width: 30%;'><strong>Last Seen: </strong></td>"
-        "<td style='text-align: left; width: 30%;'>{last_seen}</td></tr>".format(
-            last_seen=self["last_seen"]
-        )
+        "<td style='text-align: left; width: 30%;'>{last_seen}</td></tr>".format(last_seen=self["last_seen"])
     )
     content += "</tbody></table><br><br>"
     content += (
@@ -159,9 +148,7 @@ def to_riot_insight(self):
         "color:#1dbf11'><span>Common Business Service</span></strong></td>"
     )
     content += "</tbody></table><br>"
-    content += (
-        "<p>This IP is from a known business services and can " "most likely be trusted.</p></br>"
-    )
+    content += "<p>This IP is from a known business services and can " "most likely be trusted.</p></br>"
     content += "<table style='100%'><tbody>"
     content += (
         "<tr><td style='text-align: left; width: 30%;'><strong>Name: </strong></td>"
@@ -169,9 +156,7 @@ def to_riot_insight(self):
     )
     content += (
         "<tr><td style='text-align: left; width: 30%;'><strong>Last Updated: </strong>"
-        "</td><td style='text-align: left; width: 30%;'>{last_updated}</td></tr>".format(
-            last_updated=self["last_seen"]
-        )
+        "</td><td style='text-align: left; width: 30%;'>{last_updated}</td></tr>".format(last_updated=self["last_seen"])
     )
     content += "</tbody></table><br><br>"
     content += (

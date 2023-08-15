@@ -8,7 +8,7 @@ from SiemplifyUtils import convert_dict_to_json_result_dict, output_handler
 
 INTEGRATION_NAME = "GreyNoise"
 
-SCRIPT_NAME = "Context IP Lookup"
+SCRIPT_NAME = "Full IP Lookup"
 
 
 @output_handler
@@ -31,25 +31,52 @@ def main():
         siemplify.LOGGER.info("Started processing IP: {}".format(ipaddr))
 
         try:
-            res = session.ip(ipaddr)
+            res = session.quick(str(ipaddr))
+            if len(res) >= 1:
+                if res[0]["noise"] and not res[0]["riot"]:
+                    noise_res = session.ip(ipaddr)
+                    siemplify.result.add_json(str(ipaddr), noise_res)
+                    output = noise_res
+                    output["noise"] = True
+                    output_json[str(ipaddr)] = output
+                    siemplify.add_entity_insight(ipaddr, to_noise_insight(output), triggered_by=INTEGRATION_NAME)
 
-            if res["seen"]:
-                siemplify.result.add_json(str(ipaddr), res)
-                output = res
-                output["noise"] = True
-                output_json[str(ipaddr)] = output
-                siemplify.add_entity_insight(ipaddr, to_insight(output), triggered_by=INTEGRATION_NAME)
+                    output_message = output_message + " {},".format(ipaddr)
 
-                output_message = output_message + " {},".format(ipaddr)
+                if res[0]["riot"] and not res[0]["noise"]:
+                    riot_res = session.riot(ipaddr)
+                    siemplify.result.add_json(str(ipaddr), riot_res)
+                    output = riot_res
+                    output_json[str(ipaddr)] = output
+                    siemplify.add_entity_insight(ipaddr, to_riot_insight(output), triggered_by=INTEGRATION_NAME)
+
+                    output_message = output_message + " {},".format(ipaddr)
+
+                if res[0]["riot"] and res[0]["noise"]:
+                    noise_res = session.ip(ipaddr)
+                    riot_res = session.riot(ipaddr)
+                    merged_res = noise_res.copy()
+                    merged_res.update(riot_res)
+                    siemplify.result.add_json(str(ipaddr), merged_res)
+                    output = merged_res
+                    output["noise"] = True
+                    output_json[str(ipaddr)] = output
+                    siemplify.add_entity_insight(ipaddr, to_noise_insight(noise_res), triggered_by=INTEGRATION_NAME)
+                    siemplify.add_entity_insight(ipaddr, to_riot_insight(riot_res), triggered_by=INTEGRATION_NAME)
+
+                    output_message = output_message + " {},".format(ipaddr)
+
+                if not res[0]["noise"] and not res[0]["riot"]:
+                    output = res[0]
+                    output["seen"] = False
+                    output[
+                        "message"
+                    ] = "Address has not been observed mass-scanning the internet by GreyNoise in the last 90 days."
+                    siemplify.result.add_json(str(ipaddr), output)
+
             else:
-                output = res
-                output["noise"] = False
-                output[
-                    "message"
-                ] = "Address has not been observed mass-scanning the internet by GreyNoise in the last 90 days."
-                siemplify.result.add_json(str(ipaddr), output)
-
-            output_json[str(ipaddr)] = output
+                siemplify.LOGGER.info("Invalid Routable IP: {}".format(ipaddr))
+                invalid_ips.append(ipaddr)
 
         except ValueError:
             siemplify.LOGGER.info("Invalid Routable IP: {}".format(ipaddr))
@@ -93,7 +120,7 @@ def main():
     siemplify.end(output_message, result_value, status)
 
 
-def to_insight(self):
+def to_noise_insight(self):
     content = ""
     content += "<table style='100%'><tbody>"
     content += (
@@ -148,6 +175,44 @@ def to_insight(self):
         "{ip}>https://viz.greynoise.io/ip/{ip}</a></strong>&nbsp; </p>".format(ip=self["ip"])
     )
 
+    return content
+
+
+def to_riot_insight(self):
+    content = ""
+    content += "<table style='100%'><tbody>"
+    content += (
+        "<tr><td style='text-align: left; width: 30%;'><strong style='font-size: 17px;"
+        "color:#7CFC00'><span>Benign Service</span></strong></td>"
+    )
+    content += "</tbody></table><br>"
+    content += (
+        "<p>This IP is from a known harmless services and/or organizations and can " "most likely be trusted.</p></br>"
+    )
+    content += "<table style='100%'><tbody>"
+    content += (
+        "<tr><td style='text-align: left; width: 30%;'><strong>Name: </strong></td>"
+        "<td style='text-align: left; width: 30%;'>{name}</td></tr>".format(name=self["name"])
+    )
+    content += (
+        "<tr><td style='text-align: left; width: 30%;'><strong>Category: </strong></td>"
+        "<td style='text-align: left; width: 30%;'>{category}</td></tr>".format(category=self["category"])
+    )
+    content += (
+        "<tr><td style='text-align: left; width: 30%;'><strong>Last Updated: </strong>"
+        "</td><td style='text-align: left; width: 30%;'>{last_updated}</td></tr>".format(
+            last_updated=self["last_updated"]
+        )
+    )
+    content += (
+        "<tr><td style='text-align: left; width: 30%;'><strong>Explanation: </strong>"
+        "</td><td style='text-align: left; width: 30%;'>{explanation}</td></tr>".format(explanation=self["explanation"])
+    )
+    content += "</tbody></table><br><br>"
+    content += (
+        '<p><strong>More Info: <a target="_blank" href=https://viz.greynoise.io/riot/'
+        "{ip}>https://viz.greynoise.io/riot/{ip}</a></strong>&nbsp; </p>".format(ip=self["ip"])
+    )
     return content
 
 

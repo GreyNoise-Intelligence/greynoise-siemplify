@@ -16,19 +16,13 @@ def main():
     siemplify = SiemplifyAction()
     siemplify.script_name = SCRIPT_NAME
 
-    api_key = siemplify.extract_configuration_param(
-        provider_name=INTEGRATION_NAME, param_name="GN API Key"
-    )
+    api_key = siemplify.extract_configuration_param(provider_name=INTEGRATION_NAME, param_name="GN API Key")
 
     session = GreyNoise(api_key=api_key, integration_name=USER_AGENT)
 
-    ips = [
-        entity for entity in siemplify.target_entities if entity.entity_type == EntityTypes.ADDRESS
-    ]
+    ips = [entity for entity in siemplify.target_entities if entity.entity_type == EntityTypes.ADDRESS]
 
-    days = siemplify.extract_action_param(
-        param_name="days", default_value="30", is_mandatory=False, print_value=True
-    )
+    days = siemplify.extract_action_param(param_name="days", default_value="30", is_mandatory=False, print_value=True)
     try:
         days = int(days)
     except:
@@ -37,9 +31,7 @@ def main():
         result_value = False
         status = EXECUTION_STATE_FAILED
 
-    limit = siemplify.extract_action_param(
-        param_name="limit", default_value="50", is_mandatory=False, print_value=True
-    )
+    limit = siemplify.extract_action_param(param_name="limit", default_value="50", is_mandatory=False, print_value=True)
     try:
         limit = int(limit)
     except:
@@ -64,9 +56,7 @@ def main():
                 output = res
                 output_json[str(ipaddr)] = output
 
-                siemplify.add_entity_insight(
-                    ipaddr, to_insight(output), triggered_by=INTEGRATION_NAME
-                )
+                siemplify.add_entity_insight(ipaddr, to_insight(output), triggered_by=INTEGRATION_NAME)
 
                 output_message = output_message + " {},".format(ipaddr)
             else:
@@ -76,20 +66,19 @@ def main():
 
             output_json[str(ipaddr)] = output
 
-        except ValueError as e:
-            siemplify.LOGGER.info(e)
+        except ValueError:
             siemplify.LOGGER.info("Invalid Routable IP: {}".format(ipaddr))
             invalid_ips.append(ipaddr)
             continue
 
-        except RequestFailure as e:
+        except RequestFailure:
             siemplify.LOGGER.info("Unable to auth, please check API Key")
             output_message = "Unable to auth, please check API Key"
             result_value = False
             status = EXECUTION_STATE_FAILED
             break
 
-        except RateLimitError as e:
+        except RateLimitError:
             siemplify.LOGGER.info("Daily rate limit reached, please check API Key")
             output_message = "Daily rate limit reached, please check API Key"
             result_value = False
@@ -128,7 +117,10 @@ def to_insight(self):
     )
     content += "</tbody></table><br>"
     content += "<table style='100%'; border='1'; cellpadding='5'; cellspacing='5'><tbody>"
-    content += "<tr><th style='text-align:left'>Date</th><th style='text-align:left'>Classification</th><th style='text-align:left'>Tags</th></tr>"
+    content += (
+        "<tr><th style='text-align:left'>Date</th><th style='text-align:left'>"
+        "Classification</th><th style='text-align:left'>Tags</th></tr>"
+    )
     for item in self["activity"][:10]:
         tag_list = []
         for tag in item["tags"]:

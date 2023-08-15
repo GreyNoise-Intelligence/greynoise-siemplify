@@ -16,9 +16,7 @@ def main():
     siemplify = SiemplifyAction()
     siemplify.script_name = SCRIPT_NAME
 
-    api_key = siemplify.extract_configuration_param(
-        provider_name=INTEGRATION_NAME, param_name="GN API Key"
-    )
+    api_key = siemplify.extract_configuration_param(provider_name=INTEGRATION_NAME, param_name="GN API Key")
 
     session = GreyNoise(api_key=api_key, integration_name=USER_AGENT)
     result_value = True
@@ -27,10 +25,9 @@ def main():
         res = session.test_connection()
         expires = datetime.strptime(res["expiration"], "%Y-%m-%d")
         now = datetime.today()
-        print(now, expires)
         if res["offering"] != "community" and expires > now:
             # is valid enterprise api key
-            siemplify.LOGGER.info("Connectivy Response: {}".format(res))
+            siemplify.LOGGER.info("Connectivity Response: {}".format(res))
             output_message = "Successful Connection"
         elif res["offering"] != "community" and expires < now:
             # is expired enterprise api key
@@ -40,10 +37,10 @@ def main():
             status = EXECUTION_STATE_FAILED
         else:
             # is a community api key
-            siemplify.LOGGER.info("Connectivy Response: {}".format(res))
+            siemplify.LOGGER.info("Connectivity Response: {}".format(res))
             output_message = "Successful Connection"
 
-    except RequestFailure as e:
+    except RequestFailure:
         siemplify.LOGGER.info("Unable to auth, please check API Key")
         output_message = "Unable to auth, please check API Key"
         result_value = False

@@ -16,59 +16,72 @@ def main():
     siemplify = SiemplifyAction()
     siemplify.script_name = SCRIPT_NAME
 
-    api_key = siemplify.extract_configuration_param(
-        provider_name=INTEGRATION_NAME, param_name="GN API Key"
-    )
+    api_key = siemplify.extract_configuration_param(provider_name=INTEGRATION_NAME, param_name="GN API Key")
 
     session = GreyNoise(api_key=api_key, integration_name=USER_AGENT)
 
-    ips = [
-        entity for entity in siemplify.target_entities if entity.entity_type == EntityTypes.ADDRESS
-    ]
+    ips = [entity for entity in siemplify.target_entities if entity.entity_type == EntityTypes.ADDRESS]
 
-    output_message = "Successfully processed: "
+    output_message = "Successfully processed:"
     result_value = True
     status = EXECUTION_STATE_COMPLETED
     output_json = {}
+    invalid_ips = []
     for ipaddr in ips:
         siemplify.LOGGER.info("Started processing IP: {}".format(ipaddr))
+
         try:
             res = session.quick(str(ipaddr))
-            if len(res) <= 1:
-                output = res
+
+            if len(res) >= 1:
+                output = res[0]
                 siemplify.result.add_json(str(ipaddr), output)
+                output["noise"] = True
                 output_json[str(ipaddr)] = output
-                output_message = output_message + "{},".format(ipaddr)
+
+                output_message = output_message + " {},".format(str(ipaddr))
             else:
                 siemplify.LOGGER.info("Invalid Routable IP: {}".format(ipaddr))
-                output_message = (
-                    "Invalid input provided, ensure a routable IPv4 address is provided."
-                )
-                result_value = False
-                status = EXECUTION_STATE_FAILED
-                siemplify.end(output_message, result_value, status)
+                invalid_ips.append(ipaddr)
 
-        except ValueError as e:
+        except ValueError:
             siemplify.LOGGER.info("Invalid Routable IP: {}".format(ipaddr))
-            output_message = "Invalid input provided, ensure a routable IPv4 address is provided."
-            result_value = False
-            status = EXECUTION_STATE_FAILED
-            siemplify.end(output_message, result_value, status)
+            invalid_ips.append(ipaddr)
+            continue
 
-        except RequestFailure as e:
+        except RequestFailure:
+            siemplify.LOGGER.info("Unable to auth, please check API Key")
             output_message = "Unable to auth, please check API Key"
             result_value = False
             status = EXECUTION_STATE_FAILED
-            siemplify.end(output_message, result_value, status)
+            break
 
-        except RateLimitError as e:
+        except RateLimitError:
+            siemplify.LOGGER.info("Daily rate limit reached, please check API Key")
             output_message = "Daily rate limit reached, please check API Key"
             result_value = False
             status = EXECUTION_STATE_FAILED
-            siemplify.end(output_message, result_value, status)
+            break
+
+        except Exception as e:
+            siemplify.LOGGER.info(e)
+            siemplify.LOGGER.info("Unknown Error Occurred")
+            output_message = "Unknown Error Occurred"
+            result_value = False
+            status = EXECUTION_STATE_FAILED
+            break
 
     if output_json:
         siemplify.result.add_result_json({"results": convert_dict_to_json_result_dict(output_json)})
+
+    if invalid_ips and result_value:
+        invalid_ips_string = ""
+        for item in invalid_ips:
+            if invalid_ips_string == "":
+                invalid_ips_string = str(item)
+            else:
+                invalid_ips_string = invalid_ips_string + ", " + str(item)
+        output_message = output_message + " Invalid IPs skipped: {}".format(invalid_ips_string)
 
     siemplify.end(output_message, result_value, status)
 

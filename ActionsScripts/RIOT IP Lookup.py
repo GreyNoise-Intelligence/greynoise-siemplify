@@ -16,15 +16,11 @@ def main():
     siemplify = SiemplifyAction()
     siemplify.script_name = SCRIPT_NAME
 
-    api_key = siemplify.extract_configuration_param(
-        provider_name=INTEGRATION_NAME, param_name="GN API Key"
-    )
+    api_key = siemplify.extract_configuration_param(provider_name=INTEGRATION_NAME, param_name="GN API Key")
 
     session = GreyNoise(api_key=api_key, integration_name=USER_AGENT)
 
-    ips = [
-        entity for entity in siemplify.target_entities if entity.entity_type == EntityTypes.ADDRESS
-    ]
+    ips = [entity for entity in siemplify.target_entities if entity.entity_type == EntityTypes.ADDRESS]
 
     output_message = "Successfully processed:"
     result_value = True
@@ -41,40 +37,37 @@ def main():
                 siemplify.result.add_json(str(ipaddr), res)
                 output = res
                 output_json[str(ipaddr)] = output
-                siemplify.add_entity_insight(
-                    ipaddr, to_insight(output), triggered_by=INTEGRATION_NAME
-                )
+                siemplify.add_entity_insight(ipaddr, to_insight(output), triggered_by=INTEGRATION_NAME)
 
                 output_message = output_message + " {},".format(ipaddr)
             else:
                 output = res
-                output[
-                    "message"
-                ] = "Address is not associated with a known Common Business Service."
+                output["message"] = "Address is not associated with a known Common Business Service."
                 siemplify.result.add_json(str(ipaddr), output)
 
             output_json[str(ipaddr)] = output
 
-        except ValueError as e:
+        except ValueError:
             siemplify.LOGGER.info("Invalid Routable IP: {}".format(ipaddr))
             invalid_ips.append(ipaddr)
             continue
 
-        except RequestFailure as e:
+        except RequestFailure:
             siemplify.LOGGER.info("Unable to auth, please check API Key")
             output_message = "Unable to auth, please check API Key"
             result_value = False
             status = EXECUTION_STATE_FAILED
             break
 
-        except RateLimitError as e:
+        except RateLimitError:
             siemplify.LOGGER.info("Daily rate limit reached, please check API Key")
             output_message = "Daily rate limit reached, please check API Key"
             result_value = False
             status = EXECUTION_STATE_FAILED
             break
 
-        except Exception:
+        except Exception as e:
+            siemplify.LOGGER.info(e)
             siemplify.LOGGER.info("Unknown Error Occurred")
             output_message = "Unknown Error Occurred"
             result_value = False
@@ -105,8 +98,7 @@ def to_insight(self):
     )
     content += "</tbody></table><br>"
     content += (
-        "<p>This IP is from a known harmless services and/or organizations and can "
-        "most likely be trusted.</p></br>"
+        "<p>This IP is from a known harmless services and/or organizations and can " "most likely be trusted.</p></br>"
     )
     content += "<table style='100%'><tbody>"
     content += (
@@ -115,9 +107,7 @@ def to_insight(self):
     )
     content += (
         "<tr><td style='text-align: left; width: 30%;'><strong>Category: </strong></td>"
-        "<td style='text-align: left; width: 30%;'>{category}</td></tr>".format(
-            category=self["category"]
-        )
+        "<td style='text-align: left; width: 30%;'>{category}</td></tr>".format(category=self["category"])
     )
     content += (
         "<tr><td style='text-align: left; width: 30%;'><strong>Last Updated: </strong>"
@@ -127,9 +117,7 @@ def to_insight(self):
     )
     content += (
         "<tr><td style='text-align: left; width: 30%;'><strong>Explanation: </strong>"
-        "</td><td style='text-align: left; width: 30%;'>{explanation}</td></tr>".format(
-            explanation=self["explanation"]
-        )
+        "</td><td style='text-align: left; width: 30%;'>{explanation}</td></tr>".format(explanation=self["explanation"])
     )
     content += "</tbody></table><br><br>"
     content += (
